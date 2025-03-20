@@ -58,7 +58,7 @@ local HasItem = function()
     end
 end
 
-local CheckIventory = HasItem()
+local CheckInventory = HasItem()
 
 --- Dynamically selects the appropriate function to check if a player can carry an item.
 --- @return function The function to check if a player can carry an item.
@@ -272,12 +272,212 @@ end
 
 local GetItems = RetrieveItems()
 
+--- Dynamically selects the appropriate function to retrieve a player's inventory.
+--- @return function The function to retrieve player inventory.
+local GetPlayerInventory = function()
+    if inventorySystem == 'codem' then
+        return function(source)
+            local playerItems = exports[codemInv]:getUserInventory(source)
+            local itemQuantities = {}
+            local formattedItems = {}
+            
+            -- First pass: sum up quantities for each item
+            for _, itemData in pairs(playerItems) do
+                local name = itemData.name
+                local quantity = itemData.amount or 0
+                
+                if itemQuantities[name] then
+                    itemQuantities[name] = itemQuantities[name] + quantity
+                else
+                    itemQuantities[name] = quantity
+                end
+            end
+            
+            -- Second pass: create the formatted items list with combined quantities
+            for name, quantity in pairs(itemQuantities) do
+                table.insert(formattedItems, {
+                    name = name,
+                    quantity = quantity
+                })
+            end
+            
+            return formattedItems
+        end
+    elseif inventorySystem == 'ox' then
+        return function(source)
+            local inventory = exports[oxInv]:GetInventory(source)
+            local itemQuantities = {}
+            local formattedItems = {}
+            
+            if inventory and inventory.items then
+                -- First pass: sum up quantities for each item
+                for _, itemData in pairs(inventory.items) do
+                    if itemData and itemData.name then
+                        local name = itemData.name
+                        local quantity = itemData.count or 0
+                        
+                        if itemQuantities[name] then
+                            itemQuantities[name] = itemQuantities[name] + quantity
+                        else
+                            itemQuantities[name] = quantity
+                        end
+                    end
+                end
+                
+                -- Second pass: create the formatted items list with combined quantities
+                for name, quantity in pairs(itemQuantities) do
+                    table.insert(formattedItems, {
+                        name = name,
+                        quantity = quantity
+                    })
+                end
+            end
+            
+            return formattedItems
+        end
+    elseif inventorySystem == 'qb' then
+        return function(source)
+            local player = QBCore.Functions.GetPlayer(source)
+            local itemQuantities = {}
+            local formattedItems = {}
+            
+            if player and player.PlayerData and player.PlayerData.items then
+                -- First pass: sum up quantities for each item
+                for _, itemData in pairs(player.PlayerData.items) do
+                    if itemData and itemData.name then
+                        local name = itemData.name
+                        local quantity = itemData.amount or 0
+                        
+                        if itemQuantities[name] then
+                            itemQuantities[name] = itemQuantities[name] + quantity
+                        else
+                            itemQuantities[name] = quantity
+                        end
+                    end
+                end
+                
+                -- Second pass: create the formatted items list with combined quantities
+                for name, quantity in pairs(itemQuantities) do
+                    table.insert(formattedItems, {
+                        name = name,
+                        quantity = quantity
+                    })
+                end
+            end
+            
+            return formattedItems
+        end
+    elseif inventorySystem == 'qs' then
+        return function(source)
+            local playerItems = exports[qsInv]:GetInventory(source)
+            local itemQuantities = {}
+            local formattedItems = {}
+            
+            -- First pass: sum up quantities for each item
+            for _, itemData in pairs(playerItems) do
+                local name = itemData.name
+                local quantity = itemData.amount or itemData.count or 0
+                
+                if itemQuantities[name] then
+                    itemQuantities[name] = itemQuantities[name] + quantity
+                else
+                    itemQuantities[name] = quantity
+                end
+            end
+            
+            -- Second pass: create the formatted items list with combined quantities
+            for name, quantity in pairs(itemQuantities) do
+                table.insert(formattedItems, {
+                    name = name,
+                    quantity = quantity
+                })
+            end
+            
+            return formattedItems
+        end
+    else
+        if Framework == 'esx' then
+            return function(source)
+                local player = ESX.GetPlayerFromId(source)
+                local itemQuantities = {}
+                local formattedItems = {}
+                
+                if player then
+                    local inventory = player.getInventory()
+                    
+                    -- First pass: sum up quantities for each item
+                    for _, itemData in pairs(inventory) do
+                        if itemData and itemData.count and itemData.count > 0 then
+                            local name = itemData.name
+                            local quantity = itemData.count
+                            
+                            if itemQuantities[name] then
+                                itemQuantities[name] = itemQuantities[name] + quantity
+                            else
+                                itemQuantities[name] = quantity
+                            end
+                        end
+                    end
+                    
+                    -- Second pass: create the formatted items list with combined quantities
+                    for name, quantity in pairs(itemQuantities) do
+                        table.insert(formattedItems, {
+                            name = name,
+                            quantity = quantity
+                        })
+                    end
+                end
+                
+                return formattedItems
+            end
+        elseif Framework == 'qb' then
+            return function(source)
+                local player = QBCore.Functions.GetPlayer(source)
+                local itemQuantities = {}
+                local formattedItems = {}
+                
+                if player and player.PlayerData and player.PlayerData.items then
+                    -- First pass: sum up quantities for each item
+                    for _, itemData in pairs(player.PlayerData.items) do
+                        if itemData and itemData.name then
+                            local name = itemData.name
+                            local quantity = itemData.amount or 0
+                            
+                            if itemQuantities[name] then
+                                itemQuantities[name] = itemQuantities[name] + quantity
+                            else
+                                itemQuantities[name] = quantity
+                            end
+                        end
+                    end
+                    
+                    -- Second pass: create the formatted items list with combined quantities
+                    for name, quantity in pairs(itemQuantities) do
+                        table.insert(formattedItems, {
+                            name = name,
+                            quantity = quantity
+                        })
+                    end
+                end
+                
+                return formattedItems
+            end
+        else
+            return function()
+                error("GetPlayerInventory function is not supported in the current framework.")
+                return {}
+            end
+        end
+    end
+end
+
+local RetrievePlayerInventory = GetPlayerInventory()
+
 --- Returns the sorted list of items with only `name` and `label`.
 --- @return table The sorted list of items.
 BN.Inventory.RetrieveItems = function()
     return GetItems()
 end
-
 
 --- Registers a function to be called when a player uses an item.
 --- @param item string The item's name.
@@ -334,6 +534,13 @@ BN.Inventory.RemoveItem = function(source, item, count, metadata, slot)
     if player then
         RemoveItemFromInventory(player, item, count, metadata, slot, source)
     end
+end
+
+--- Returns a player's inventory items with name and quantity.
+--- @param source number The player's server ID.
+--- @return table A list of player's inventory items, each with name and quantity.
+BN.Inventory.GetPlayerInventory = function(source)
+    return RetrievePlayerInventory(source)
 end
 
 return BN.Inventory
