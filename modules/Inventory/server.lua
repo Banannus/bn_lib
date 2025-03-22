@@ -7,14 +7,19 @@ local qbInv = 'qb-inventory'
 local qsInv = 'qs-inventory'
 
 local inventorySystem
+local inventoryPath
 if GetResourceState(codemInv) == 'started' then
     inventorySystem = 'codem'
+    inventoryPath = 'codem-inventory/html/itemimages/'
 elseif GetResourceState(oxInv) == 'started' then
     inventorySystem = 'ox'
+    inventoryPath = 'ox_inventory/web/images/'
 elseif GetResourceState(qbInv) == 'started' then
     inventorySystem = 'qb'
+    inventoryPath = 'qb-inventory/html/images/'
 elseif GetResourceState(qsInv) == 'started' then
     inventorySystem = 'qs'
+    inventoryPath = 'qs-inventory/html/images/'
 end
 
 --- Dynamically selects the appropriate function to check if a player has an item.
@@ -472,6 +477,16 @@ local GetPlayerInventory = function()
 end
 
 local RetrievePlayerInventory = GetPlayerInventory()
+
+--- Returns the inventory image path in use.
+--- @return string The inventory image path.
+local function GetInventoryPath()
+    return inventoryPath
+end
+
+--- Returns the inventory image path in use.
+--- @return string The inventory image path.
+BN.Inventory.GetInventoryPath = GetInventoryPath
 
 --- Returns the sorted list of items with only `name` and `label`.
 --- @return table The sorted list of items.

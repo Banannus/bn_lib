@@ -1,4 +1,4 @@
-local EnableOX = true -- Enable use of ox_lib for progressbars if available
+local EnableOX = false -- Enable use of ox_lib for progressbars if available
 
 --- Selects and returns the most appropriate function for starting a progress bar.
 -- This function determines the best method for displaying progress bars based on the current game setup
