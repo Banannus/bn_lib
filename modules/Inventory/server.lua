@@ -65,6 +65,97 @@ end
 
 local CheckInventory = HasItem()
 
+--- Dynamically selects the appropriate function to get item data with metadata.
+--- @return function The function to get item data from a specific slot.
+local GetItemData = function()
+    if inventorySystem == 'codem' then
+        return function(player, item, source, metadata)
+            local inventory = exports[codemInv]:getUserInventory(source)
+            if not inventory then return nil end
+            
+            for _, itemData in pairs(inventory) do
+                if itemData.name == item then
+                    return itemData
+                end
+            end
+            return nil
+        end
+    elseif inventorySystem == 'ox' then
+        return function(player, item, source, metadata)
+            local items = exports[oxInv]:Search(source, 'slots', item)
+            if not items or #items == 0 then return nil end
+            
+            -- If metadata is provided, find matching item
+            if metadata then
+                for _, itemData in ipairs(items) do
+                    local matches = true
+                    for key, value in pairs(metadata) do
+                        if not itemData.metadata or itemData.metadata[key] ~= value then
+                            matches = false
+                            break
+                        end
+                    end
+                    if matches then
+                        return itemData
+                    end
+                end
+            end
+            
+            -- Return first item if no metadata filter or no match
+            return items[1]
+        end
+    elseif inventorySystem == 'qb' then
+        return function(player, item, source, metadata)
+            local Player = QBCore.Functions.GetPlayer(source)
+            if not Player or not Player.PlayerData.items then return nil end
+            
+            for _, itemData in pairs(Player.PlayerData.items) do
+                if itemData and itemData.name == item then
+                    return itemData
+                end
+            end
+            return nil
+        end
+    elseif inventorySystem == 'qs' then
+        return function(player, item, source, metadata)
+            local inventory = exports[qsInv]:GetInventory(source)
+            if not inventory then return nil end
+            
+            for _, itemData in pairs(inventory) do
+                if itemData and itemData.name == item then
+                    return itemData
+                end
+            end
+            return nil
+        end
+    else
+        if Framework == 'esx' then
+            return function(player, item)
+                local itemData = player.getInventoryItem(item)
+                return itemData
+            end
+        elseif Framework == 'qb' then
+            return function(player, item)
+                if not player.PlayerData.items then return nil end
+                
+                for _, itemData in pairs(player.PlayerData.items) do
+                    if itemData and itemData.name == item then
+                        return itemData
+                    end
+                end
+                return nil
+            end
+        else
+            return function()
+                error("Unsupported framework for GetItem.")
+                return nil
+            end
+        end
+    end
+end
+
+local GetItemFromInventory = GetItemData()
+
 --- Dynamically selects the appropriate function to check if a player can carry an item.
 --- @return function The function to check if a player can carry an item.
 local CanCarryItem = function()
@@ -509,6 +600,17 @@ BN.Inventory.HasItem = function(source, item)
     local player = BN.GetPlayer(source)
     if player == nil then return 0 end
     return CheckInventory(player, item, source)
+end
+
+--- Returns the full item data including metadata for a specific item.
+--- @param source number The player's server ID.
+--- @param item string The item's name.
+--- @param metadata table|nil Optional metadata to match specific items (ox_inventory).
+--- @return table|nil The item data from the inventory slot including metadata, or nil if not found.
+BN.Inventory.GetItem = function(source, item, metadata)
+    local player = BN.GetPlayer(source)
+    if player == nil then return nil end
+    return GetItemFromInventory(player, item, source, metadata)
 end
 
 --- Checks if a player can carry an item.
