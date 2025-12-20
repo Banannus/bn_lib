@@ -55,14 +55,25 @@ end
 ---@param debugPoly boolean Whether to debug the polygon.
 ---@return handler The handle to the created zone.
 BN.Target.AddCircleZone = function(identifier, coords, radius, data, debugPoly)
-    local handler = exports[target]:AddCircleZone(identifier, coords, radius, {
-        name = identifier,
-        useZ = true,
-        debugPoly = debugPoly,
-    }, {
-        options = data.options,
-        distance = data.distance,
-    })
+    if target == 'ox_target' then
+        exports.ox_target:addSphereZone({
+            coords = coords,
+            radius = radius,
+            debug = debugPoly,
+            options = data.options,
+            distance = data.distance,
+            name = identifier,
+        })
+    else
+        local handler = exports[target]:AddCircleZone(identifier, coords, radius, {
+            name = identifier,
+            useZ = true,
+            debugPoly = debugPoly,
+        }, {
+            options = data.options,
+            distance = data.distance,
+        })
+    end
     return handler
 end
 
@@ -129,7 +140,9 @@ BN.Target.AddLocalEntity = function(entity, data)
                 canInteract = option.canInteract,
                 onSelect = option.onSelect,
                 iconColor = option.iconColor,
-                distance = data.distance
+                distance = data.distance,
+                event = option.event,
+                args = option.args,
             })
         end
         exports.ox_target:addLocalEntity(entity, oxOptions)
@@ -138,6 +151,14 @@ BN.Target.AddLocalEntity = function(entity, data)
             options = data.options,
             distance = data.distance,
         })
+    end
+end
+
+BN.Target.RemoveLocalEntity = function(entity)
+    if target == 'ox_target' then
+        exports.ox_target:removeLocalEntity(entity)
+    elseif target == 'qb-target' then
+        exports["qb-target"]:RemoveTargetEntity(entity)
     end
 end
 

@@ -1,7 +1,6 @@
 -- @class BN.Money
 BN.Money = {}
 
-
 --- Dynamically selects and returns the appropriate function for checking if a player has money
 --- based on the configured framework.
 ----@return function A function that checks if a player has enough money in an account.
@@ -76,9 +75,43 @@ local RemoveMoney = function()
     end
 end
 
+local AddMoney = function()
+    if Framework == 'esx' then
+        return function(source, account, amount)
+            -- Convert 'cash' to 'money' for ESX compatibility
+            if account == 'cash' then
+                account = 'money'
+            end
+            
+            local xPlayer = ESX.GetPlayerFromId(source)
+            if xPlayer then
+                xPlayer.addAccountMoney(account, amount)
+                return true
+            end
+            return false
+        end
+    elseif Framework == 'qb' then
+        return function(source, account, amount)
+            local Player = QBCore.Functions.GetPlayer(source)
+            if Player then
+                Player.Functions.AddMoney(account, amount)
+                return true
+            end
+            return false
+        end
+    else
+        -- Fallback function for unsupported frameworks. Logs an error message.
+        return function(source, account, amount)
+            error(string.format("Unsupported framework. Unable to add money for source: %s", source))
+            return false
+        end
+    end
+end
+
 -- Assign the dynamically selected functions to local variables.
 local CheckPlayerMoney = HasMoney()
 local RemoveMoneyFromPlayer = RemoveMoney()
+local AddMoneyToPlayer = AddMoney()
 
 --- Checks if a player has enough money in a specified account.
 ----@param source number The server ID of the player.
@@ -98,6 +131,17 @@ end
 ----@return boolean Returns true if money was successfully removed; returns false if the player is not found or if an error occurs.
 BN.Money.RemoveMoney = function(source, account, amount)
     return RemoveMoneyFromPlayer(source, account, amount)
+end
+
+--- Adds money to a player's account, abstracting framework-specific logic.
+--- This function serves as a wrapper that calls a pre-defined function based on the current game framework
+--- optimized for performance by determining the appropriate function during script initialization.
+----@param source number The server ID of the player.
+----@param account string The account type ('cash', 'bank', 'black_money'). 'cash' works for both ESX and QB frameworks.
+----@param amount number The amount of money to add.
+----@return boolean Returns true if money was successfully added; returns false if the player is not found or if an error occurs.
+BN.Money.AddMoney = function(source, account, amount)
+    return AddMoneyToPlayer(source, account, amount)
 end
 
 return BN.Money

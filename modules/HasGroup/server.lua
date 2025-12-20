@@ -1,3 +1,4 @@
+
 local CheckForDuty = false -- Only count on duty jobs as part of the HasGroup function.
 
 --- Dynamically selects and returns the appropriate function for checking a player's group
@@ -35,7 +36,6 @@ local HasGroup = function()
         return function(player, filter)
             local typeOfFilter = type(filter)
             local groups = { 'job', 'gang' }
-
             if typeOfFilter == 'string' then
                 for _, group in ipairs(groups) do
                     local data = player.PlayerData[group]
@@ -90,7 +90,7 @@ local PlayerHasGroup = HasGroup()
 -- @param filter string The group name to check the player against.
 BN.HasGroup = function(source, filter)
     local player = BN.GetPlayer(source)
-    if not player then return end
+    if not player then return nil end
     return PlayerHasGroup(player, filter)
 end
 

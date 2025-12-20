@@ -1,3 +1,5 @@
+BN.HasGroup = BN.HasGroup or {}
+
 local CheckForDuty = false -- Only count on duty jobs as part of the HasGroup function.
 
 --- Dynamically selects and returns the appropriate function for checking a player's group

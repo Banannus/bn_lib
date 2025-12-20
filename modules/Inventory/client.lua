@@ -4,11 +4,17 @@ BN.Inventory = {}
 local inventorySystem
 local codemInv = 'codem-inventory' -- Variable to store the string name codem-inventory
 local oxInv = 'ox_inventory' -- Variable to store the string name ox_inventory
+local qbInv = 'qb-inventory' -- Variable to store the string name qb-inventory
+local qsInv = 'qs-inventory' -- Variable to store the string name qs-inventory
 
 if GetResourceState(codemInv) == 'started' then
     inventorySystem = 'codem'
 elseif GetResourceState(oxInv) == 'started' then
     inventorySystem = 'ox'
+elseif GetResourceState(qbInv) == 'started' then
+    inventorySystem = 'qb'
+elseif GetResourceState(qsInv) == 'started' then
+    inventorySystem = 'qs'
 end
 
 -- Dynamic selection function to determine how to check for item existence.
@@ -114,6 +120,42 @@ local HasItemInInventory = HasItem()
 -- Assign the dynamically selected function to BN.Inventory.HasItem
 BN.Inventory.HasItem = function(items)
     return HasItemInInventory(items)
+end
+
+--- Opens a stash inventory.
+--- @param stashId string The unique identifier for the stash.
+--- @param owner string|nil Optional owner identifier for the stash.
+--- @param data table|nil Optional additional data (slots, weight, label, etc.).
+--- @return boolean Returns true if the stash was opened successfully.
+BN.Inventory.OpenStash = function(stashId, owner, data)
+    if inventorySystem == 'ox' then
+        local stashData = {
+            id = stashId,
+            owner = owner
+        }
+        exports[oxInv]:openInventory('stash', stashData)
+        return true
+    elseif inventorySystem == 'qb' then
+        local stashData = data or {}
+        stashData.stashId = stashId
+        stashData.maxweight = stashData.maxweight or stashData.weight or 100000
+        stashData.slots = stashData.slots or 50
+        
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", stashId, stashData)
+        TriggerEvent("inventory:client:SetCurrentStash", stashId)
+        return true
+    elseif inventorySystem == 'codem' then
+        -- Codem inventory stash opening
+        exports[codemInv]:OpenStash(stashId, owner)
+        return true
+    elseif inventorySystem == 'qs' then
+        -- QS inventory stash opening
+        TriggerServerEvent('inventory:server:OpenInventory', 'stash', stashId, data)
+        return true
+    else
+        print("[BN.Inventory] Opening stash not supported for current inventory system")
+        return false
+    end
 end
 
 return BN.Inventory

@@ -660,4 +660,31 @@ BN.Inventory.GetPlayerInventory = function(source)
     return RetrievePlayerInventory(source)
 end
 
+--- Registers a stash inventory.
+--- @param stashId string The unique identifier for the stash.
+--- @param stashLabel string The display label for the stash.
+--- @param slots number The number of slots in the stash.
+--- @param weight number The maximum weight capacity of the stash.
+--- @param owner string|nil Optional owner identifier for the stash.
+--- @return boolean Returns true if the stash was registered successfully.
+BN.Inventory.RegisterStash = function(stashId, stashLabel, slots, weight, owner)
+    if inventorySystem == 'ox' then
+        exports[oxInv]:RegisterStash(stashId, stashLabel, slots, weight, owner)
+        return true
+    elseif inventorySystem == 'qb' then
+        -- QB-Inventory doesn't require server-side registration
+        -- Stashes are created on-the-fly when opened
+        return true
+    elseif inventorySystem == 'codem' then
+        -- Codem-inventory stash registration (if supported)
+        return true
+    elseif inventorySystem == 'qs' then
+        -- QS-Inventory stash registration (if supported)
+        return true
+    else
+        print("[BN.Inventory] Stash registration not supported for current inventory system")
+        return false
+    end
+end
+
 return BN.Inventory
