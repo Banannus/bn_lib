@@ -13,4 +13,4 @@ Discord: [https://discord.gg/bndev](https://discord.gg/7mz63z72pN)
 This project is licensed under the Lesser General Public License v3.0 (LGPLv3). A copy of the license can be found here [License](./LICENSE)
 
 ### Credits
-Special thanks to Samuel's Development. [@samuel](https://github.com/Samuels-Development/sd_lib)
+Special thanks to Samuel's Development. [@samuel](https://github.com/Samuels-Development/sd_lib) and ox_lib
